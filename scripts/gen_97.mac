@@ -20,7 +20,7 @@
 /g4sbs/beamspotsize    0.5 mm
 /g4sbs/beamoffsetx     0.0 mm
 /g4sbs/beamoffsety     0.0 mm
-/g4sbs/beamE           6.3 GeV
+/g4sbs/beamE           8.4 GeV
 /g4sbs/thmin           25.0 deg
 /g4sbs/thmax           45.0 deg
 /g4sbs/phmin          -30.0 deg
