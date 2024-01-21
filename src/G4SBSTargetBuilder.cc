@@ -4948,7 +4948,7 @@ void G4SBSTargetBuilder::BuildGEnTarget_LadderPlate(G4LogicalVolume *motherLog){
   G4double trtube_OD = 11*mm; //Transfer Tube diameter
   G4double inch = 25.4*mm;  
   G4double plate_width = 12.7*mm;  
-  G4double x0   = -trtube_OD/2 - plate_width/2; // beam right   
+  G4double x0   = -15*mm - plate_width/2; // beam right   
   G4double y0   = -5.33*cm;    // lower than target cell  
   G4double z0   =  1.5*inch + 2.*mm;   // TODO: should be 1.5*inch, but I see overlaps in stand-alone build.  
   // z0 issue SOLVED 10/16/20 (target was previously too long by about 2.4 inches)
