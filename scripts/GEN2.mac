@@ -8,6 +8,9 @@
 /g4sbs/targpres        10 atmosphere     ## Target pressure
 /g4sbs/targlen         60.0 cm           ## Target Length
 /g4sbs/targgenhhconfig 300               ## HH coil position
+/g4sbs/numtargspinstates 1               ## Number of pol states, only 1 for GEN
+/g4sbs/targthetaspin     70 deg          ## Pol theta direction
+/g4sbs/targphispin     0 deg          ## Pol theta direction	
 /g4sbs/targgenDRX      0 deg             ## target angular misalignment about x axis  
 /g4sbs/targgenDRY      0 deg             ## target angular misalignment about y axis
 /g4sbs/targgenDRZ      0 deg             ## target angular misalignment about z axis

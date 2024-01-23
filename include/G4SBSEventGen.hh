@@ -73,6 +73,8 @@ public:
   
   ev_t GetEventData();
   
+  void GetAsymmetry(G4SBS::Nucl_t nucl, G4LorentzVector ei, G4LorentzVector q_lab, G4LorentzVector ei_Nrest, G4LorentzVector ef_Nrest);
+
   void SetNevents(int n){fNevt = n;}
   void SetBeamCur(double c){fBeamCur = c;}
   void SetBeamE(double c){fBeamE= c; fBeamP = G4ThreeVector(0.0, 0.0, c); }
@@ -267,7 +269,7 @@ private:
   G4double fCosmicsMaxAngle;
   G4double fCosmicsCeilingRadius;
   
-  double fWeight, fQ2, fW2, fxbj, fSigma, fAperp, fApar;
+  double fWeight, fQ2, fW2, fxbj, fSigma, fAperp, fApar, fAen;
   double fPt, fPl;  // born-approx polarization componenets
   int fhel;         // electron beam helicity
 

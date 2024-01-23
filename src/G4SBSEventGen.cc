@@ -306,6 +306,78 @@ void G4SBSEventGen::Initialize(){
   fInitialized = true;
 }
 
+
+void G4SBSEventGen::GetAsymmetry(G4SBS::Nucl_t nucl, G4LorentzVector ei, G4LorentzVector q_lab, G4LorentzVector ei_Nrest, G4LorentzVector ef_Nrest){
+  G4double Mp = proton_mass_c2;  
+
+  // Get the target polarization direction
+  double thspin, phspin;
+  if( fNumTargetSpinDirections == 1 ){
+    thspin = fTargetThetaSpin[0];
+    phspin = fTargetPhiSpin[0];
+  } else {
+    thspin = 0.0;
+    phspin = 0.0;
+  }
+  
+  fTargPolDirection.set( sin(thspin)*cos(phspin), sin(thspin)*sin(phspin), cos(thspin) );
+
+  G4double theta_qpol = acos( q_lab.vect().unit().dot( fTargPolDirection ) );
+
+  //Get scattered electron plane
+  G4ThreeVector zaxis_lab = q_lab.vect().unit();
+  G4ThreeVector yaxis_lab = zaxis_lab.cross(ei.vect().unit()).unit();
+  G4ThreeVector xaxis_lab = yaxis_lab.cross(zaxis_lab).unit();
+  
+  G4double phi_qpol = atan2( fTargPolDirection.dot(yaxis_lab), fTargPolDirection.dot(xaxis_lab) );
+    
+  //  Do cross sections and asymmetries
+
+  G4double GE, GM, GD;
+
+  G4double tau = fQ2/(4.0*Mp*Mp);
+  G4double alpha = fine_structure_const;
+
+  G4double th_Nrest = acos( ei_Nrest.vect().unit().dot( ef_Nrest.vect().unit()) );
+  
+  GD = pow(1.0 + fQ2/(0.71*GeV*GeV), -2.0);
+
+  switch( nucl ){
+  case G4SBS::kNeutron:
+    // Our fit
+    GE = (1.520*tau + 2.629*tau*tau + 3.055*tau*tau*tau)*GD/(1.0+5.222*tau+0.040*tau*tau+11.438*tau*tau*tau);
+    // Kelly
+    GM = -1.913*(1.0+2.33*tau)/(1.0 + 14.72*tau + 24.20*tau*tau + 84.1*tau*tau*tau );
+    break;
+  default:
+    // Kelly
+    GE = (1.0-0.24*tau)/(1.0 + 10.98*tau + 12.82*tau*tau + 21.97*tau*tau*tau );
+    // Kelly
+    GM = 2.79*(1.0+0.12*tau)/(1.0 + 10.97*tau + 18.86*tau*tau + 6.55*tau*tau*tau );
+    break;
+  }
+
+  //Differential cross section dsigma/dOmega_e in the nucleon rest frame:
+  double dsdx_Mott = pow( cos(th_Nrest/2.0)*alpha*hbarc/(2.0*ei_Nrest.e()*sin(th_Nrest/2.0)*sin(th_Nrest/2.0)), 2.0);
+  fSigma    = dsdx_Mott*(ef_Nrest.e()/ei_Nrest.e())*( (GE*GE+tau*GM*GM)/(1.0+tau) + 2.0*tau*GM*GM*tan(th_Nrest/2.0)*tan(th_Nrest/2.0) ); // Dimensions of area
+
+
+  fApar  = -(2.0*tau*sqrt(1.0+tau+pow((1.0+tau)*tan(th_Nrest/2.0),2.0)  )*tan(th_Nrest/2.0))/
+    (pow(GE/GM,2.0) + (tau + 2.0*tau*(1.0+tau)*pow(tan(th_Nrest/2.0),2.0)  ));
+  fAperp = -(GE/GM)*2.0*sqrt(tau*(tau+1.0))*tan(th_Nrest/2.0)/
+    (pow(GE/GM,2.0) + (tau + 2.0*tau*(1.0+tau)*pow(tan(th_Nrest/2.0),2.0)  ));
+
+  fAen = fApar * cos(theta_qpol) + fAperp * sin(theta_qpol)*cos(phi_qpol);
+
+  // Calculate longitudinal / transverse polarization components 
+  double r = GE / GM;
+  double epsilon = pow(1.0 + 2.0*(1.0+tau)*tan(th_Nrest/2.0)*tan(th_Nrest/2.0), -1);
+  fPt = ( -fhel*(GetBeamPol()).z()*sqrt( (2.0*epsilon*(1.0-epsilon))/tau) ) * ( r / (1.0+epsilon*r*r/tau) );
+  fPl = ( fhel*(GetBeamPol()).z()*sqrt(1.0-epsilon*epsilon) ) / ( 1.0+epsilon*r*r/tau );
+
+}
+
+
 bool G4SBSEventGen::GenerateEvent(){
   // Generate initial electron
   // Insert radiative effects: Where are the radiative effects?
@@ -723,7 +795,7 @@ void G4SBSEventGen::CalculateBeamAnglesAndPositions(G4double bd_L,std::vector<G4
 
 bool G4SBSEventGen::GenerateElastic( G4SBS::Nucl_t nucl, G4LorentzVector ei, G4LorentzVector ni ){
   G4double Mp = proton_mass_c2;
-
+  
   G4ThreeVector boost_Nrest = ni.boostVector();
 
   G4LorentzVector Pisum_lab = ei + ni;
@@ -775,51 +847,11 @@ bool G4SBSEventGen::GenerateElastic( G4SBS::Nucl_t nucl, G4LorentzVector ei, G4L
   //G4LorentzVector q_Nrest = ei_Nrest - ef_Nrest;
   
   fQ2 = Q2;
-    
-  //  Do cross sections and asymmetries
 
-  G4double GE, GM, GD;
-
-  G4double tau = fQ2/(4.0*Mp*Mp);
-  G4double alpha = fine_structure_const;
-
-  G4double th_Nrest = acos( ei_Nrest.vect().unit().dot( ef_Nrest.vect().unit()) );
-  
-  GD = pow(1.0 + fQ2/(0.71*GeV*GeV), -2.0);
-
-  switch( nucl ){
-  case G4SBS::kNeutron:
-    // Our fit
-    GE = (1.520*tau + 2.629*tau*tau + 3.055*tau*tau*tau)*GD/(1.0+5.222*tau+0.040*tau*tau+11.438*tau*tau*tau);
-    // Kelly
-    GM = -1.913*(1.0+2.33*tau)/(1.0 + 14.72*tau + 24.20*tau*tau + 84.1*tau*tau*tau );
-    break;
-  default:
-    // Kelly
-    GE = (1.0-0.24*tau)/(1.0 + 10.98*tau + 12.82*tau*tau + 21.97*tau*tau*tau );
-    // Kelly
-    GM = 2.79*(1.0+0.12*tau)/(1.0 + 10.97*tau + 18.86*tau*tau + 6.55*tau*tau*tau );
-    break;
-  }
-
-  //Differential cross section dsigma/dOmega_e in the nucleon rest frame:
-  double dsdx_Mott = pow( cos(th_Nrest/2.0)*alpha*hbarc/(2.0*ei_Nrest.e()*sin(th_Nrest/2.0)*sin(th_Nrest/2.0)), 2.0);
-  fSigma    = dsdx_Mott*(ef_Nrest.e()/ei_Nrest.e())*( (GE*GE+tau*GM*GM)/(1.0+tau) + 2.0*tau*GM*GM*tan(th_Nrest/2.0)*tan(th_Nrest/2.0) ); // Dimensions of area
-
-
-  fApar  = -(2.0*tau*sqrt(1.0+tau+pow((1.0+tau)*tan(th_Nrest/2.0),2.0)  )*tan(th_Nrest/2.0))/
-    (pow(GE/GM,2.0) + (tau + 2.0*tau*(1.0+tau)*pow(tan(th_Nrest/2.0),2.0)  ));
-  fAperp = -(GE/GM)*2.0*sqrt(tau*(tau+1.0))*tan(th_Nrest/2.0)/
-    (pow(GE/GM,2.0) + (tau + 2.0*tau*(1.0+tau)*pow(tan(th_Nrest/2.0),2.0)  ));
-
-  // Calculate longitudinal / transverse polarization components 
-  double r = GE / GM;
-  double epsilon = pow(1.0 + 2.0*(1.0+tau)*tan(th_Nrest/2.0)*tan(th_Nrest/2.0), -1);
-  fPt = ( -fhel*(GetBeamPol()).z()*sqrt( (2.0*epsilon*(1.0-epsilon))/tau) ) * ( r / (1.0+epsilon*r*r/tau) );
-  fPl = ( fhel*(GetBeamPol()).z()*sqrt(1.0-epsilon*epsilon) ) / ( 1.0+epsilon*r*r/tau );
+  // Calculate the asymmetry 
+  GetAsymmetry(nucl, ei, q_lab, ei_Nrest, ef_Nrest);
 
   // Boost back
-
   G4LorentzVector q_Nrest = ei_Nrest - ef_Nrest;
   //G4cout << "Q2 (lab) = " << fQ2/pow(GeV,2) << " GeV^2, Q2 (Nrest) = " << -q_Nrest.m2()/pow(GeV,2) << " GeV^2" << G4endl;
   
@@ -878,6 +910,7 @@ bool G4SBSEventGen::GenerateElastic( G4SBS::Nucl_t nucl, G4LorentzVector ei, G4L
   //    printf("nfp_e = %f GeV\n", nfp.e()/GeV);
 
   fFinalNucl = nucl;
+
   return true;
 }
 
@@ -2519,16 +2552,19 @@ bool G4SBSEventGen::GenerateSIMC(){
   fSIMCEvent.Clear();
 
   G4double Mh;
+  G4SBS::Nucl_t nucl;
   bool invalid_hadron = true;
   switch(fHadronType) {
   case G4SBS::kP:
     Mh = proton_mass_c2;
     fSIMCEvent.fnucl = 1;
+    nucl = G4SBS::kProton;
     invalid_hadron = false;
     break;
   case G4SBS::kN:
     Mh = neutron_mass_c2;
     fSIMCEvent.fnucl = 0;
+    nucl = G4SBS::kNeutron;
     invalid_hadron = false;
     break;
   }
@@ -2562,7 +2598,12 @@ bool G4SBSEventGen::GenerateSIMC(){
   fSIMCEvent.px_n = fSIMCTree->p_p*fSIMCTree->ux_p;
   fSIMCEvent.py_n = fSIMCTree->p_p*fSIMCTree->uy_p;
   fSIMCEvent.pz_n = fSIMCTree->p_p*fSIMCTree->uz_p;
-  
+
+  double pm_x = fSIMCTree->Pmx / GeV;
+  double pm_y = fSIMCTree->Pmy / GeV;
+  double pm_z = fSIMCTree->Pmz / GeV;
+  double Em = fSIMCTree->Em / GeV;
+
   fSIMCEvent.vx = fSIMCTree->vxi*cm;
   fSIMCEvent.vy = fSIMCTree->vyi*cm;
   fSIMCEvent.vz = fSIMCTree->vzi*cm;
@@ -2577,6 +2618,31 @@ bool G4SBSEventGen::GenerateSIMC(){
   fNucleonP.rotateZ(-TMath::PiOver2());
   fNucleonE = sqrt(fSIMCEvent.p_n*fSIMCEvent.p_n+Mh*Mh);
 
+
+  //////// *** Now we will do some calculations for asymmetries for He3 **** ////////////////////
+  //Incoming electron 4-vector
+  G4LorentzVector ei(0,0,fSIMCEvent.Ebeam,fSIMCEvent.Ebeam);
+  //Outgoing electron 4-vector
+  G4LorentzVector ef(fElectronP,fSIMCEvent.Ebeam);
+  //Starting nucleon
+  G4LorentzVector ni(pm_x,pm_y,pm_z,Em);
+
+  G4ThreeVector boost_Nrest = ni.boostVector();
+  G4LorentzVector ei_Nrest = ei;
+  G4LorentzVector ni_Nrest = ni;
+  G4LorentzVector ef_Nrest = ef;
+
+  ei_Nrest.boost( -boost_Nrest );
+  ef_Nrest.boost( -boost_Nrest );
+  ni_Nrest.boost( -boost_Nrest );
+
+  //q vector
+  G4LorentzVector q_lab = ei - ef;
+
+  // Calculate the asymmetry 
+  GetAsymmetry(nucl, ei, q_lab, ei_Nrest, ef_Nrest);
+  
+  
   return true;
   
 }
@@ -2637,6 +2703,7 @@ ev_t G4SBSEventGen::GetEventData(){
   }
   data.Aperp  = fAperp;
   data.Apar   = fApar;
+  data.Aen    = fAen;
   data.Pt     = fPt;
   data.Pl     = fPl;
   data.W2     = fW2/(GeV*GeV);
@@ -2730,7 +2797,7 @@ ev_t G4SBSEventGen::GetEventData(){
     data.fnucl   = -1;
     break;
   }
-    
+
   data.earmaccept = 0;
   data.harmaccept = 0;
 

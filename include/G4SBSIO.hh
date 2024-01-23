@@ -38,7 +38,7 @@ typedef struct {
 //Also "solang" is a "run" level quantity, shouldn't really be written to the tree every event, but whatever.
 typedef struct {
   Double_t count, rate, solang, sigma, W2, xbj, Q2, th, ph;
-  Double_t Aperp, Apar;
+  Double_t Aperp, Apar, Aen;
   Double_t Pt, Pl;
   Double_t vx, vy, vz;
   Double_t ep, np;
