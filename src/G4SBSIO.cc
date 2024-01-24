@@ -165,7 +165,7 @@ void G4SBSIO::InitializeTree(){
   
   // Let's stop changing the ev_t data structure, because it screws up reading of the tree in the future. If we want to store any other event-specific information,
   // then let's add dedicated tree branches to hold said information:
-  fTree->Branch("ev", &evdata, "count/D:rate/D:solang/D:sigma/D:W2/D:xbj/D:Q2/D:th/D:ph/D:Aperp/D:Apar/D:Apar/D:Pt/D:Pl/D:vx/D:vy/D:vz/D:ep/D:np/D:epx/D:epy/D:epz/D:npx/D:npy/D:npz/D:nth/D:nph/D:pmperp/D:pmpar/D:pmparsm/D:z/D:phperp/D:phih/D:phiS/D:thetaS/D:MX2/D:Sx/D:Sy/D:Sz/D:s/D:t/D:u/D:costhetaCM/D:Egamma/D:nucl/I:fnucl/I:hadr/I:earmaccept/I:harmaccept/I");
+  fTree->Branch("ev", &evdata, "count/D:rate/D:solang/D:sigma/D:W2/D:xbj/D:Q2/D:th/D:ph/D:Aperp/D:Apar/D:Aen/D:Pt/D:Pl/D:vx/D:vy/D:vz/D:ep/D:np/D:epx/D:epy/D:epz/D:npx/D:npy/D:npz/D:nth/D:nph/D:pmperp/D:pmpar/D:pmparsm/D:z/D:phperp/D:phih/D:phiS/D:thetaS/D:MX2/D:Sx/D:Sy/D:Sz/D:s/D:t/D:u/D:costhetaCM/D:Egamma/D:nucl/I:fnucl/I:hadr/I:earmaccept/I:harmaccept/I");
   //fTree->Branch("tr", &trdata, "x/D:y/D:xp/D:yp/D:tx/D:ty/D:txp/D:typ/D:hcal/I:bb/I:gemtr/I:hcx/D:hcy/D:bcx/D:bcy/D:hct/D:hctex/D:hclx/D:hcly/D:hclz/D:hcdang/D");
   //fTree->Branch("gen", &gendata, "thbb/D:thsbs/D:dbb/D:dsbs/D:dhcal/D:voffhcal/D:drich/D:dsbstrkr/D:Ebeam/D");
 
